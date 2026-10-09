@@ -17,6 +17,8 @@ if(NOT COMMAND string_camel_case_to_lower_case_underscore)
   include("${rosidl_cmake_DIR}/string_camel_case_to_lower_case_underscore.cmake")
 endif()
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 #
 # Generate an RTT service plugin for ROS service types.
 #
@@ -87,7 +89,7 @@ function(_rtt_ros2_generate_ros_service_plugin _package)
   # Generate source and header files
   add_custom_command(
     OUTPUT ${_generated_header_files} ${_generated_source_files}
-    COMMAND ${PYTHON_EXECUTABLE} -m rtt_ros2_services
+    COMMAND Python3::Interpreter -m rtt_ros2_services
       --package "${_package}"
       --services ${_services}
       --output-dir "${_output_dir}"
@@ -113,6 +115,9 @@ function(_rtt_ros2_generate_ros_service_plugin _package)
   )
   ament_target_dependencies(${_target}
     ${_package}
+    rclcpp
+    rtt_ros2
+    rtt_ros2_node
     rtt_ros2_services
   )
   # Note: Not sure why this is required. It should not be required anymore in ROS foxy and upwards.

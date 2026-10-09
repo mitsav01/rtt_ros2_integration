@@ -55,9 +55,13 @@ endif()
 
 ament_add_gtest(test_ros_transport test/test_ros_transport.cpp)
 orocos_configure_executable(test_ros_transport)
+ament_target_dependencies(test_ros_transport
+  rtt_ros2_topics
+)
 target_link_libraries(test_ros_transport
   rtt_ros2::rtt_ros2
   rtt_ros2_node::rtt_ros2_node
+  rtt_ros2_topics::rtt_ros2_topics
   rtt_ros2_test_msgs::rtt_test_msgs_typekit
 )
 target_compile_definitions(test_ros_transport

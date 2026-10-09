@@ -26,6 +26,7 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/waitable.hpp"
+#include "rtt_ros2/detail/rclcpp_version.h"
 
 namespace rtt_ros2_topics
 {
@@ -93,6 +94,85 @@ public:
     return 1u;
   }
 
+#if rclcpp_VERSION_GTE(21, 0, 0)
+  void add_to_wait_set(rcl_wait_set_t * wait_set) override
+  {
+    if (wait_set) {
+      add_to_wait_set(*wait_set);
+    }
+  }
+
+  void add_to_wait_set(rcl_wait_set_t & wait_set) override
+  {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+
+    const rcl_ret_t ret = rcl_wait_set_add_guard_condition(
+      &wait_set, &rcl_guard_condition_, nullptr);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+  }
+
+  bool is_ready(rcl_wait_set_t *) override
+  {
+    return has_work_;
+  }
+
+  bool is_ready(const rcl_wait_set_t &) override
+  {
+    return has_work_;
+  }
+
+  std::shared_ptr<void> take_data() override
+  {
+    return nullptr;
+  }
+
+  void execute(const std::shared_ptr<void> &) override
+  {
+    std::lock_guard<std::mutex> lock(execute_mutex_);
+    if (!func_) {return;}
+
+    has_work_ = false;
+    if (!func_()) {
+      // eventually there is more work for us...
+      trigger();
+    }
+  }
+#elif rclcpp_VERSION_GTE(0, 9, 0)
+  void add_to_wait_set(rcl_wait_set_t * wait_set) override
+  {
+    std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
+
+    const rcl_ret_t ret = rcl_wait_set_add_guard_condition(
+      wait_set, &rcl_guard_condition_, nullptr);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+  }
+
+  bool is_ready(rcl_wait_set_t *) override
+  {
+    return has_work_;
+  }
+
+  std::shared_ptr<void> take_data() override
+  {
+    return nullptr;
+  }
+
+  void execute(std::shared_ptr<void> &) override
+  {
+    std::lock_guard<std::mutex> lock(execute_mutex_);
+    if (!func_) {return;}
+
+    has_work_ = false;
+    if (!func_()) {
+      // eventually there is more work for us...
+      trigger();
+    }
+  }
+#else
   bool add_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     std::lock_guard<std::recursive_mutex> lock(reentrant_mutex_);
@@ -118,6 +198,7 @@ public:
       trigger();
     }
   }
+#endif
 
 private:
   std::recursive_mutex reentrant_mutex_;

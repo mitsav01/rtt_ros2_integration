@@ -55,6 +55,9 @@ endif()
 
 ament_add_gtest(test_ros_params test/test_ros_params.cpp)
 orocos_configure_executable(test_ros_params)
+ament_target_dependencies(test_ros_params
+  rtt_ros2_params
+)
 target_link_libraries(test_ros_params
   rtt_ros2::rtt_ros2
   rtt_ros2_node::rtt_ros2_node

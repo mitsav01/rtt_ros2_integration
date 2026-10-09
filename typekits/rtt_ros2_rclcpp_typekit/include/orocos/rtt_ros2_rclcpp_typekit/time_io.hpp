@@ -24,15 +24,15 @@
 #include "time_conversions.hpp"
 #include "wrapped_duration.hpp"
 
-namespace rtt_ros2_rcpcpp_typekit
+namespace rtt_ros2_rclcpp_typekit
 {
 
-static inline std::ostream & operator<<(std::ostream & os, const rclcpp::Time & t)
+inline std::ostream & operator<<(std::ostream & os, const rclcpp::Time & t)
 {
   return os << t.seconds();
 }
 
-static inline std::istream & operator>>(std::istream & is, rclcpp::Time & t)
+inline std::istream & operator>>(std::istream & is, rclcpp::Time & t)
 {
   double d = 0.0;
   if (is >> d) {
@@ -41,12 +41,12 @@ static inline std::istream & operator>>(std::istream & is, rclcpp::Time & t)
   return is;
 }
 
-static inline std::ostream & operator<<(std::ostream & os, const rclcpp::Duration & t)
+inline std::ostream & operator<<(std::ostream & os, const rclcpp::Duration & t)
 {
   return os << t.seconds();
 }
 
-static inline std::istream & operator>>(std::istream & is, rclcpp::Duration & t)
+inline std::istream & operator>>(std::istream & is, rclcpp::Duration & t)
 {
   double d = 0.0;
   if (is >> d) {
@@ -55,12 +55,26 @@ static inline std::istream & operator>>(std::istream & is, rclcpp::Duration & t)
   return is;
 }
 
-static inline std::ostream & operator<<(std::ostream & os, const rmw_time_t & t)
+inline std::ostream & operator<<(std::ostream & os, const WrappedDuration & t)
+{
+  return os << t.seconds();
+}
+
+inline std::istream & operator>>(std::istream & is, WrappedDuration & t)
+{
+  double d = 0.0;
+  if (is >> d) {
+    t = rtt_ros2_rclcpp_typekit::double_to_duration(d);
+  }
+  return is;
+}
+
+inline std::ostream & operator<<(std::ostream & os, const rmw_time_t & t)
 {
   return os << rtt_ros2_rclcpp_typekit::rmw_time_t_to_double(t);
 }
 
-static inline std::istream & operator>>(std::istream & is, rmw_time_t & t)
+inline std::istream & operator>>(std::istream & is, rmw_time_t & t)
 {
   double d = 0.0;
   if (is >> d) {
@@ -69,13 +83,29 @@ static inline std::istream & operator>>(std::istream & is, rmw_time_t & t)
   return is;
 }
 
-}  // namespace rtt_ros2_rcpcpp_typekit
+}  // namespace rtt_ros2_rclcpp_typekit
 
-// import streaming operators in namespace RTT for RTT::types::TypeStreamSelector
+// Global and RTT namespace streaming operators for ADL in RTT::types::TypeStreamSelector
+inline std::ostream & operator<<(std::ostream & os, const rmw_time_t & t)
+{
+  return rtt_ros2_rclcpp_typekit::operator<<(os, t);
+}
+
+inline std::istream & operator>>(std::istream & is, rmw_time_t & t)
+{
+  return rtt_ros2_rclcpp_typekit::operator>>(is, t);
+}
+
+namespace rclcpp
+{
+using rtt_ros2_rclcpp_typekit::operator<<;
+using rtt_ros2_rclcpp_typekit::operator>>;
+}  // namespace rclcpp
+
 namespace RTT
 {
-using rtt_ros2_rcpcpp_typekit::operator<<;
-using rtt_ros2_rcpcpp_typekit::operator>>;
+using rtt_ros2_rclcpp_typekit::operator<<;
+using rtt_ros2_rclcpp_typekit::operator>>;
 }  // namespace RTT
 
 #endif  // OROCOS__RTT_ROS2_RCLCPP_TYPEKIT__TIME_IO_HPP_

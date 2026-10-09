@@ -17,6 +17,8 @@ if(NOT COMMAND string_camel_case_to_lower_case_underscore)
   include("${rosidl_cmake_DIR}/string_camel_case_to_lower_case_underscore.cmake")
 endif()
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 #
 # Generate an RTT transport plugin for ROS message types.
 #
@@ -77,7 +79,7 @@ function(_rtt_ros2_generate_ros_transport _package)
   # Generate source and header files
   add_custom_command(
     OUTPUT ${_generated_header_files} ${_generated_source_files}
-    COMMAND ${PYTHON_EXECUTABLE} -m rtt_ros2_topics
+    COMMAND Python3::Interpreter -m rtt_ros2_topics
       --package "${_package}"
       --messages ${_messages}
       --output-dir "${_output_dir}"
@@ -103,6 +105,7 @@ function(_rtt_ros2_generate_ros_transport _package)
   ament_target_dependencies(${_target}
     ${_package}
     rclcpp
+    rtt_ros2
     rtt_ros2_node
     rtt_ros2_topics
   )

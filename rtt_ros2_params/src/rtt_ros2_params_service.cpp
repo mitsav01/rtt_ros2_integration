@@ -171,7 +171,15 @@ bool RosParamService::setOrDeclareParameter(
     RTT::log(RTT::Info) <<
       "The parameter did not exist" <<
       RTT::endlog();
-    rosnode->declare_parameter(name);
+    try {
+      rosnode->declare_parameter(name, value);
+      return true;
+    } catch (const std::exception & e) {
+      RTT::log(RTT::Error) <<
+        "Failed to declare parameter " << name << ": " <<
+        e.what() << RTT::endlog();
+      return false;
+    }
   }
 
   // Update the parameter
